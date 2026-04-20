@@ -89,6 +89,7 @@ let mapScroll, mascotX, venueTimer, floatIcons;
 let selectedItem = null;
 let textIndex = 0;
 let selectedOption = null;
+let canSkipAnimation = false;
 
 function preload() {
   searchImg = loadImage(ASSET_BASE + "search.png");
@@ -137,20 +138,22 @@ function drawIntro() {
   fill(255, 220, 100);
   noStroke();
   textAlign(CENTER, CENTER);
-  textSize(30);
-  text("A Day with Search", W / 2, 190);
+  textSize(48);
+  textStyle(BOLD);
+  text("A Day with Search", W / 2, 150);
+  textStyle(NORMAL);
 
-  textSize(14);
+  textSize(16);
   fill(180, 160, 220);
-  text("a single-session adventure", W / 2, 235);
+  text("a single-session adventure", W / 2, 220);
 
   let bob = sin(frameCount * 0.05) * 5;
-  drawSprite(searchImg, W / 2, H / 2 - 10 + bob, 160);
+  drawSprite(searchImg, W / 2, H / 2 - 20 + bob, 180);
 
   let pulse = map(sin(frameCount * 0.07), -1, 1, 120, 255);
   fill(255, pulse);
-  textSize(15);
-  text("tap anywhere to start", W / 2, H - 110);
+  textSize(18);
+  text("✨ tap anywhere to start ✨", W / 2, H - 100);
 }
 
 function drawMorning() {
@@ -159,31 +162,33 @@ function drawMorning() {
   fill(120, 90, 160);
   noStroke();
   textAlign(CENTER, TOP);
-  textSize(14);
-  text("Good morning! Customize your day", W / 2, 30);
+  textSize(16);
+  textStyle(BOLD);
+  text("Good morning! Customize your day", W / 2, 25);
+  textStyle(NORMAL);
 
   if (selectedItem === null) {
     let bob = sin(frameCount * 0.05) * 5;
-    drawSprite(searchImg, W / 2, 120 + bob, 100);
+    drawSprite(searchImg, W / 2, 110 + bob, 110);
 
     fill(50, 30, 70);
     textAlign(CENTER, TOP);
-    textSize(12);
-    text("tap an item below", W / 2, 210);
+    textSize(14);
+    text("tap an item below", W / 2, 230);
 
     ROOM_ITEMS.forEach((item, i) => {
-      let isHovered = dist(mouseX, mouseY, item.x, item.y) < 50;
+      let isHovered = dist(mouseX, mouseY, item.x, item.y) < 60;
       let scale = isHovered ? 1.15 : 1;
 
       fill(80, 50, 130);
       stroke(150, 100, 180);
       strokeWeight(2);
-      ellipse(item.x, item.y, 70 * scale);
+      ellipse(item.x, item.y, 85 * scale);
 
       noStroke();
       fill(255);
       textAlign(CENTER, CENTER);
-      textSize(32);
+      textSize(56);
       text(item.emoji, item.x, item.y);
     });
   } else {
@@ -195,22 +200,22 @@ function drawChoiceScreen(item) {
   fill(255);
   stroke(120, 80, 160);
   strokeWeight(3);
-  rect(20, 80, W - 40, H - 160, 20);
+  rect(20, 60, W - 40, H - 140, 20);
   noStroke();
 
   fill(40, 20, 60);
   textAlign(CENTER, TOP);
-  textSize(22);
+  textSize(28);
   textStyle(BOLD);
-  text(item.title, W / 2, 110);
+  text(item.title, W / 2, 85);
   textStyle(NORMAL);
 
-  let scrollY = 160;
-  let bx = 40, bw = W - 80, bh = 50, gap = 10;
+  let scrollY = 140;
+  let bx = 40, bw = W - 80, bh = 55, gap = 12;
 
   item.options.forEach((opt, i) => {
     let by = scrollY + i * (bh + gap);
-    if (by > H - 100) return;
+    if (by > H - 80) return;
 
     let isHovered = mouseX > bx && mouseX < bx + bw && mouseY > by && mouseY < by + bh;
     fill(isHovered ? 200 : 255);
@@ -221,15 +226,15 @@ function drawChoiceScreen(item) {
     noStroke();
     fill(40, 20, 60);
     textAlign(CENTER, CENTER);
-    textSize(13);
+    textSize(15);
     text(opt.label, bx + bw / 2, by + bh / 2);
   });
 
   fill(100, 70, 130);
   noStroke();
   textAlign(CENTER, BOTTOM);
-  textSize(11);
-  text("← back", W / 2, H - 25);
+  textSize(12);
+  text("← tap back to return", W / 2, H - 20);
 }
 
 function drawMap() {
@@ -278,6 +283,13 @@ function drawMap() {
   if (mapScroll > 200) {
     let v = VENUES[venueIdx];
     drawChatBubble(W / 2, H / 2, "Arriving at...", v.name, 140, 80);
+    if (mapScroll > 260) {
+      fill(100, 70, 130);
+      noStroke();
+      textAlign(CENTER, BOTTOM);
+      textSize(11);
+      text("tap to continue →", W / 2, H - 80);
+    }
   }
 
   if (mapScroll > 340) {
@@ -301,19 +313,19 @@ function drawVenue() {
   noStroke();
   fill(50, 25, 75);
   textAlign(CENTER, TOP);
-  textSize(22);
+  textSize(26);
   textStyle(BOLD);
-  text(v.name, W / 2, 30);
+  text(v.name, W / 2, 25);
   textStyle(NORMAL);
 
-  textSize(13);
+  textSize(15);
   fill(160, 120, 200);
-  text(v.vibe + " vibes", W / 2, 60);
+  text(v.vibe + " vibes", W / 2, 55);
 
   fill(80, 50, 120);
-  textSize(11);
+  textSize(13);
   textAlign(CENTER, TOP);
-  text(v.description, 20, 85, W - 40, 80);
+  text(v.description, 18, 80, W - 36, 90);
 
   let sc = 1.0;
   if (venueTimer < 20)       sc = map(venueTimer, 0,  20, 1.0, 1.2);
@@ -331,7 +343,7 @@ function drawVenue() {
   }
 
   textAlign(CENTER, CENTER);
-  textSize(20);
+  textSize(32);
   floatIcons.forEach(ic => {
     ic.y -= 1.4;
     ic.life--;
@@ -340,8 +352,14 @@ function drawVenue() {
   });
   floatIcons = floatIcons.filter(ic => ic.life > 0);
 
-  let isLast = venueIdx >= VENUES.length - 1;
-  drawButton(isLast ? "Head home ✦" : "Keep exploring →", W / 2, H - 60, 200, 50);
+  if (venueTimer > 40) {
+    fill(100, 70, 130);
+    noStroke();
+    textAlign(CENTER, BOTTOM);
+    textSize(11);
+    let nextLabel = venueIdx >= VENUES.length - 1 ? "head home" : "continue";
+    text("tap to " + nextLabel + " →", W / 2, H - 80);
+  }
 }
 
 function drawEndcard() {
@@ -350,27 +368,29 @@ function drawEndcard() {
   fill(255, 220, 100);
   noStroke();
   textAlign(CENTER, CENTER);
-  textSize(18);
-  text("What a day!", W / 2, 160);
+  textSize(32);
+  textStyle(BOLD);
+  text("What a day!", W / 2, 140);
+  textStyle(NORMAL);
 
   let bob = sin(frameCount * 0.05) * 5;
-  drawSprite(searchImg, W / 2, H / 2 - 80 + bob, 150);
+  drawSprite(searchImg, W / 2, H / 2 - 60 + bob, 160);
 
-  textSize(14);
+  textSize(18);
   fill(180, 160, 220);
-  text("Today's vibe:", W / 2, H / 2 + 60);
+  text("Today's vibe:", W / 2, H / 2 + 70);
 
-  textSize(28);
+  textSize(36);
   fill(255, 220, 100);
-  text(personalityLabel, W / 2, H / 2 + 100);
+  text(personalityLabel, W / 2, H / 2 + 120);
 
   let eLabel = ["Low Energy", "Balanced", "High Energy"][energy];
   let sLabel = ["Solo Mode", "Balanced", "Social Butterfly"][social];
-  textSize(12);
+  textSize(14);
   fill(160, 140, 200);
-  text(eLabel + "  ·  " + sLabel, W / 2, H / 2 + 140);
+  text(eLabel + "  ·  " + sLabel, W / 2, H / 2 + 160);
 
-  drawButton("Play again", W / 2, H - 110, 180, 50);
+  drawButton("Play again", W / 2, H - 70, 200, 50);
 }
 
 // --- game logic ---
@@ -480,7 +500,7 @@ function mousePressed() {
   if (state === MORNING) {
     if (selectedItem === null) {
       ROOM_ITEMS.forEach(item => {
-        if (dist(mouseX, mouseY, item.x, item.y) < 50) {
+        if (dist(mouseX, mouseY, item.x, item.y) < 60) {
           selectedItem = item;
         }
       });
@@ -500,12 +520,17 @@ function mousePressed() {
     return;
   }
 
-  if (state === VENUE) {
-    if (hitButton(W / 2, H - 60, 200, 50)) {
-      venueIdx++;
-      if (venueIdx >= VENUES.length) state = ENDCARD;
-      else goToMap();
+  if (state === MAP) {
+    if (mapScroll > 260) {
+      mapScroll = 340;
     }
+    return;
+  }
+
+  if (state === VENUE) {
+    venueIdx++;
+    if (venueIdx >= VENUES.length) state = ENDCARD;
+    else goToMap();
     return;
   }
 
