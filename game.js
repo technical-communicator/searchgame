@@ -3,9 +3,13 @@ const ASSET_BASE = "./";
 const W = 390, H = 844;
 const INTRO = 0, MORNING = 1, MAP = 2, VENUE = 3, ENDCARD = 4;
 
-const CHOICES = [
+const ROOM_ITEMS = [
   {
-    prompt: "What's for breakfast?",
+    title: "Breakfast",
+    emoji: "🍳",
+    x: 100,
+    y: 300,
+    completed: false,
     options: [
       { label: "Skip it",                    energy: -1, vibe: null,    social:  0 },
       { label: "Make something at home",     energy:  1, vibe: "Cozy",  social:  0 },
@@ -13,7 +17,11 @@ const CHOICES = [
     ]
   },
   {
-    prompt: "What are you listening to?",
+    title: "Music",
+    emoji: "🎵",
+    x: 280,
+    y: 320,
+    completed: false,
     options: [
       { label: "Lo-fi beats",          energy:  0, vibe: "Cozy",  social:  0 },
       { label: "Indie punk",           energy:  1, vibe: "Edgy",  social:  0 },
@@ -23,7 +31,11 @@ const CHOICES = [
     ]
   },
   {
-    prompt: "What are you wearing?",
+    title: "Outfit",
+    emoji: "👕",
+    x: 190,
+    y: 500,
+    completed: false,
     options: [
       { label: "Cozy hoodie",          energy:  1, vibe: "Cozy",  social:  0 },
       { label: "Leather jacket",       energy:  0, vibe: "Edgy",  social:  1 },
@@ -35,10 +47,34 @@ const CHOICES = [
 ];
 
 const VENUES = [
-  { name: "Diablicos Coffee",  file: "diablicos.png",  vibe: "Artsy", icons: ["☕", "✨", "☕"] },
-  { name: "Will's Pub",        file: "wills.png",      vibe: "Indie", icons: ["♪",  "♫",  "★"]  },
-  { name: "Syzn Thrift",       file: "syzn.png",       vibe: "Edgy",  icons: ["✦",  "⚡",  "★"]  },
-  { name: "Funky's Vintage",   file: "funkys.png",     vibe: "Indie", icons: ["✦",  "♻",  "✨"]  },
+  {
+    name: "Diablicos Coffee",
+    file: "diablicos.png",
+    vibe: "Artsy",
+    icons: ["☕", "✨", "☕"],
+    description: "A Panamanian-inspired hidden gem in South Eola with vibrant, magical décor and warm service. Known for sourcing world-class Geisha coffee directly from Panama's renowned Café Unido."
+  },
+  {
+    name: "Will's Pub",
+    file: "wills.png",
+    vibe: "Indie",
+    icons: ["♪",  "♫",  "★"],
+    description: "An iconic dive bar since 1995 and the heart of Orlando's indie music scene. With intimate acoustics, live performances from local and traveling bands, and craft drinks."
+  },
+  {
+    name: "Syzn Thrift",
+    file: "syzn.png",
+    vibe: "Edgy",
+    icons: ["✦",  "⚡",  "★"],
+    description: "A curated vintage and alternative fashion shop near UCF with affordable finds and great prices. Perfect for discovering unique, one-of-a-kind pieces."
+  },
+  {
+    name: "Funky's Vintage",
+    file: "funkys.png",
+    vibe: "Indie",
+    icons: ["✦",  "♻",  "✨"],
+    description: "Located in the Milk District and voted Best Vintage Store in Orlando. Packed with quality vintage clothing by the pound, retro games, and collectibles."
+  },
 ];
 
 let state;
@@ -46,10 +82,13 @@ let searchImg;
 let mascotImgs = {};
 
 let energy, social, vibeCounts;
-let choiceIdx, venueIdx;
+let venueIdx;
 let personalityLabel;
 
 let mapScroll, mascotX, venueTimer, floatIcons;
+let selectedItem = null;
+let textIndex = 0;
+let selectedOption = null;
 
 function preload() {
   searchImg = loadImage(ASSET_BASE + "search.png");
@@ -67,13 +106,15 @@ function resetGame() {
   energy = 1;
   social = 1;
   vibeCounts = {};
-  choiceIdx = 0;
   venueIdx = 0;
   personalityLabel = "";
   mapScroll = 0;
   mascotX = W + 120;
   venueTimer = 0;
   floatIcons = [];
+  selectedItem = null;
+  textIndex = 0;
+  selectedOption = null;
 }
 
 // --- draw loop ---
@@ -115,52 +156,110 @@ function drawIntro() {
 function drawMorning() {
   background(245, 235, 210);
 
-  let bob = sin(frameCount * 0.05) * 3;
-  drawSprite(searchImg, W - 55, 70 + bob, 80);
-
   fill(120, 90, 160);
   noStroke();
-  textAlign(LEFT, TOP);
-  textSize(12);
-  text(`morning  ${choiceIdx + 1}/${CHOICES.length}`, 24, 30);
+  textAlign(CENTER, TOP);
+  textSize(14);
+  text("Good morning! Customize your day", W / 2, 30);
 
-  let c = CHOICES[choiceIdx];
+  if (selectedItem === null) {
+    let bob = sin(frameCount * 0.05) * 5;
+    drawSprite(searchImg, W / 2, 120 + bob, 100);
+
+    fill(50, 30, 70);
+    textAlign(CENTER, TOP);
+    textSize(12);
+    text("tap an item below", W / 2, 210);
+
+    ROOM_ITEMS.forEach((item, i) => {
+      let isHovered = dist(mouseX, mouseY, item.x, item.y) < 50;
+      let scale = isHovered ? 1.15 : 1;
+
+      fill(80, 50, 130);
+      stroke(150, 100, 180);
+      strokeWeight(2);
+      ellipse(item.x, item.y, 70 * scale);
+
+      noStroke();
+      fill(255);
+      textAlign(CENTER, CENTER);
+      textSize(32);
+      text(item.emoji, item.x, item.y);
+    });
+  } else {
+    drawChoiceScreen(selectedItem);
+  }
+}
+
+function drawChoiceScreen(item) {
+  fill(255);
+  stroke(120, 80, 160);
+  strokeWeight(3);
+  rect(20, 80, W - 40, H - 160, 20);
+  noStroke();
 
   fill(40, 20, 60);
   textAlign(CENTER, TOP);
-  textSize(19);
-  text(c.prompt, W / 2, 100);
+  textSize(22);
+  textStyle(BOLD);
+  text(item.title, W / 2, 110);
+  textStyle(NORMAL);
 
-  let bx = 28, bw = W - 56, bh = 56, gap = 12, startY = 190;
-  c.options.forEach((opt, i) => {
-    let by = startY + i * (bh + gap);
-    fill(255);
-    stroke(190, 160, 210);
+  let scrollY = 160;
+  let bx = 40, bw = W - 80, bh = 50, gap = 10;
+
+  item.options.forEach((opt, i) => {
+    let by = scrollY + i * (bh + gap);
+    if (by > H - 100) return;
+
+    let isHovered = mouseX > bx && mouseX < bx + bw && mouseY > by && mouseY < by + bh;
+    fill(isHovered ? 200 : 255);
+    stroke(100, 60, 140);
     strokeWeight(2);
-    rect(bx, by, bw, bh, 14);
+    rect(bx, by, bw, bh, 12);
+
     noStroke();
-    fill(50, 30, 70);
+    fill(40, 20, 60);
     textAlign(CENTER, CENTER);
-    textSize(14);
+    textSize(13);
     text(opt.label, bx + bw / 2, by + bh / 2);
   });
+
+  fill(100, 70, 130);
+  noStroke();
+  textAlign(CENTER, BOTTOM);
+  textSize(11);
+  text("← back", W / 2, H - 25);
 }
 
 function drawMap() {
-  background(120, 190, 240);
+  background(140, 200, 255);
 
-  fill(100, 180, 100);
+  let cloudOffset = (mapScroll * 0.3) % 400;
+  drawClouds(cloudOffset);
+
+  fill(80, 120, 60);
+  noStroke();
+  let treeOffset = (mapScroll * 0.7) % 200;
+  for (let x = -treeOffset; x < W + 200; x += 200) {
+    drawTree(x, H - 180, 40);
+  }
+
+  fill(180, 160, 100);
+  rect(0, H - 200, W, 30);
+
+  fill(60, 90, 50);
   noStroke();
   rect(0, H - 140, W, 140);
 
-  fill(80, 160, 80);
+  fill(50, 80, 40);
   for (let x = (-(mapScroll * 1.5) % 90); x < W + 90; x += 90) {
     rect(x, H - 130, 60, 18, 4);
   }
 
-  fill(160, 140, 120);
+  fill(100, 100, 80);
   rect(0, H - 120, W, 30);
-  fill(230, 220, 80);
+  fill(220, 210, 100);
   for (let x = (-(mapScroll * 2) % 80); x < W + 80; x += 80) {
     rect(x, H - 108, 40, 8, 2);
   }
@@ -178,18 +277,7 @@ function drawMap() {
 
   if (mapScroll > 200) {
     let v = VENUES[venueIdx];
-    fill(255, 245, 255, 230);
-    stroke(140, 100, 180);
-    strokeWeight(2);
-    rect(W / 2 - 140, H / 2 - 36, 280, 72, 14);
-    noStroke();
-    fill(90, 60, 120);
-    textAlign(CENTER, CENTER);
-    textSize(13);
-    text("Arriving at...", W / 2, H / 2 - 12);
-    textSize(17);
-    fill(60, 30, 100);
-    text(v.name, W / 2, H / 2 + 18);
+    drawChatBubble(W / 2, H / 2, "Arriving at...", v.name, 140, 80);
   }
 
   if (mapScroll > 340) {
@@ -214,17 +302,24 @@ function drawVenue() {
   fill(50, 25, 75);
   textAlign(CENTER, TOP);
   textSize(22);
-  text(v.name, W / 2, 50);
+  textStyle(BOLD);
+  text(v.name, W / 2, 30);
+  textStyle(NORMAL);
 
   textSize(13);
   fill(160, 120, 200);
-  text(v.vibe + " vibes", W / 2, 84);
+  text(v.vibe + " vibes", W / 2, 60);
+
+  fill(80, 50, 120);
+  textSize(11);
+  textAlign(CENTER, TOP);
+  text(v.description, 20, 85, W - 40, 80);
 
   let sc = 1.0;
   if (venueTimer < 20)       sc = map(venueTimer, 0,  20, 1.0, 1.2);
   else if (venueTimer < 40)  sc = map(venueTimer, 20, 40, 1.2, 1.0);
   let bob2 = sin(frameCount * 0.05) * 4;
-  drawSprite(searchImg, 70, H / 2 + 20 + bob2, 110 * sc);
+  drawSprite(searchImg, 70, H / 2 + 80 + bob2, 110 * sc);
 
   if (venueTimer % 20 === 0) {
     floatIcons.push({
@@ -246,7 +341,7 @@ function drawVenue() {
   floatIcons = floatIcons.filter(ic => ic.life > 0);
 
   let isLast = venueIdx >= VENUES.length - 1;
-  drawButton(isLast ? "Head home ✦" : "Keep exploring →", W / 2, H - 110, 200, 50);
+  drawButton(isLast ? "Head home ✦" : "Keep exploring →", W / 2, H - 60, 200, 50);
 }
 
 function drawEndcard() {
@@ -280,21 +375,23 @@ function drawEndcard() {
 
 // --- game logic ---
 
-function pickOption(opt) {
+function pickOption(opt, item) {
   energy = constrain(energy + opt.energy, 0, 2);
   social = constrain(social + opt.social, 0, 2);
   if (opt.vibe) vibeCounts[opt.vibe] = (vibeCounts[opt.vibe] || 0) + 1;
 
-  choiceIdx++;
-  if (choiceIdx >= CHOICES.length) {
+  item.completed = true;
+  let allSelected = ROOM_ITEMS.every(item => item.completed);
+  if (allSelected) {
     personalityLabel = resolvePersonality();
     goToMap();
+  } else {
+    selectedItem = null;
   }
 }
 
 function resolvePersonality() {
   let top = null, topN = 0;
-  // ties favor later entry, matching the spec
   ["Cozy", "Indie", "Edgy", "Artsy", "Queer"].forEach(v => {
     if ((vibeCounts[v] || 0) >= topN) { top = v; topN = vibeCounts[v] || 0; }
   });
@@ -327,6 +424,51 @@ function hitButton(cx, cy, bw, bh) {
          mouseY > cy - bh / 2 && mouseY < cy + bh / 2;
 }
 
+function drawChatBubble(cx, cy, line1, line2, w, h) {
+  fill(255, 245, 255);
+  stroke(140, 100, 180);
+  strokeWeight(2);
+  rect(cx - w / 2, cy - h / 2, w, h, 14);
+
+  triangle(cx - 20, cy + h / 2, cx, cy + h / 2 + 15, cx + 20, cy + h / 2);
+
+  noStroke();
+  fill(90, 60, 120);
+  textAlign(CENTER, CENTER);
+  textSize(13);
+  text(line1, cx, cy - 8);
+  textSize(17);
+  fill(60, 30, 100);
+  text(line2, cx, cy + 12);
+}
+
+function drawClouds(offset) {
+  fill(255, 255, 255, 150);
+  noStroke();
+
+  drawCloud(50 - offset, 80, 60);
+  drawCloud(280 - offset, 120, 50);
+  drawCloud(150 - offset, 60, 55);
+  drawCloud(350 - offset, 140, 45);
+}
+
+function drawCloud(x, y, size) {
+  ellipse(x, y, size * 1.2, size * 0.6);
+  ellipse(x - size * 0.4, y + size * 0.1, size * 0.8, size * 0.5);
+  ellipse(x + size * 0.4, y + size * 0.1, size * 0.8, size * 0.5);
+}
+
+function drawTree(x, y, size) {
+  fill(80, 120, 60);
+  noStroke();
+  rect(x + size * 0.3, y + size * 0.6, size * 0.4, size * 0.8);
+
+  fill(60, 100, 50);
+  ellipse(x + size * 0.5, y - size * 0.2, size * 0.8, size * 0.7);
+  ellipse(x + size * 0.2, y + size * 0.1, size * 0.6, size * 0.6);
+  ellipse(x + size * 0.8, y + size * 0.1, size * 0.6, size * 0.6);
+}
+
 // --- input ---
 
 function mousePressed() {
@@ -336,19 +478,30 @@ function mousePressed() {
   }
 
   if (state === MORNING) {
-    let c = CHOICES[choiceIdx];
-    let bx = 28, bw = W - 56, bh = 56, gap = 12, startY = 190;
-    c.options.forEach((opt, i) => {
-      let by = startY + i * (bh + gap);
-      if (mouseX >= bx && mouseX <= bx + bw && mouseY >= by && mouseY <= by + bh) {
-        pickOption(opt);
+    if (selectedItem === null) {
+      ROOM_ITEMS.forEach(item => {
+        if (dist(mouseX, mouseY, item.x, item.y) < 50) {
+          selectedItem = item;
+        }
+      });
+    } else {
+      if (mouseY > 160 && mouseY < H - 100) {
+        let bx = 40, bw = W - 80, bh = 50, gap = 10, scrollY = 160;
+        selectedItem.options.forEach((opt, i) => {
+          let by = scrollY + i * (bh + gap);
+          if (mouseX > bx && mouseX < bx + bw && mouseY > by && mouseY < by + bh) {
+            pickOption(opt, selectedItem);
+          }
+        });
+      } else if (mouseY > H - 50) {
+        selectedItem = null;
       }
-    });
+    }
     return;
   }
 
   if (state === VENUE) {
-    if (hitButton(W / 2, H - 110, 200, 50)) {
+    if (hitButton(W / 2, H - 60, 200, 50)) {
       venueIdx++;
       if (venueIdx >= VENUES.length) state = ENDCARD;
       else goToMap();
