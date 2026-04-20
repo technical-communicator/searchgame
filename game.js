@@ -116,6 +116,7 @@ function resetGame() {
   selectedItem = null;
   textIndex = 0;
   selectedOption = null;
+  ROOM_ITEMS.forEach(item => item.completed = false);
 }
 
 // --- draw loop ---
@@ -133,38 +134,42 @@ function draw() {
 // --- screens ---
 
 function drawIntro() {
-  background(28, 18, 48);
+  background(255, 245, 220);
 
-  drawPixelBorder(30, 90, W - 60, 290, 4, color(255, 220, 100));
+  drawCRTFrame();
 
-  fill(255, 220, 100);
+  fill(170, 120, 80);
   noStroke();
   textAlign(CENTER, CENTER);
-  textSize(40);
+  textSize(42);
   textStyle(BOLD);
-  text("A DAY", W / 2, 150);
-  text("WITH SEARCH", W / 2, 210);
+  text("A DAY", W / 2, 140);
+  text("WITH SEARCH", W / 2, 200);
   textStyle(NORMAL);
 
-  textSize(14);
-  fill(180, 160, 220);
-  text("~ SINGLE SESSION ADVENTURE ~", W / 2, 280);
+  textSize(13);
+  fill(140, 100, 60);
+  text("~ A cozy adventure ~", W / 2, 270);
 
   let bob = sin(frameCount * 0.05) * 8;
-  drawSprite(searchImg, W / 2, H / 2 + 50 + bob, 200);
+  drawSprite(searchImg, W / 2, H / 2 + 60 + bob, 200);
 
-  let pulse = map(sin(frameCount * 0.07), -1, 1, 100, 255);
-  fill(255, 100, 150, pulse);
+  let pulse = map(sin(frameCount * 0.07), -1, 1, 100, 200);
+  fill(220, 150, 100, pulse);
   textSize(16);
-  text("> TAP TO START <", W / 2, H - 80);
+  text("> TAP TO START <", W / 2, H - 100);
+
+  drawRoomDecorations();
 }
 
 function drawMorning() {
-  background(245, 235, 210);
+  background(255, 245, 220);
 
-  drawPixelBorder(10, 10, W - 20, 85, 3, color(120, 90, 160));
+  drawCRTFrame();
 
-  fill(120, 90, 160);
+  drawPixelBorder(10, 10, W - 20, 85, 3, color(180, 140, 100));
+
+  fill(140, 100, 60);
   noStroke();
   textAlign(CENTER, CENTER);
   textSize(20);
@@ -176,7 +181,7 @@ function drawMorning() {
     let bob = sin(frameCount * 0.05) * 8;
     drawSprite(searchImg, W / 2, 170 + bob, 120);
 
-    fill(50, 30, 70);
+    fill(100, 70, 40);
     textAlign(CENTER, TOP);
     textSize(13);
     text("[ SELECT AN ITEM ]", W / 2, 310);
@@ -186,11 +191,11 @@ function drawMorning() {
       let scale = isHovered ? 1.2 : 1.0;
 
       if (isHovered) {
-        fill(255, 200, 100);
-        stroke(255, 200, 100);
+        fill(255, 200, 130);
+        stroke(200, 140, 80);
       } else {
-        fill(100, 60, 150);
-        stroke(150, 100, 180);
+        fill(255, 230, 180);
+        stroke(180, 140, 100);
       }
       strokeWeight(3);
       rect(item.x - 55 * scale, item.y - 55 * scale, 110 * scale, 110 * scale, 8);
@@ -201,7 +206,7 @@ function drawMorning() {
       textSize(60);
       text(item.emoji, item.x, item.y - 8);
 
-      fill(40, 20, 60);
+      fill(120, 80, 50);
       textSize(12);
       textStyle(BOLD);
       text(item.title, item.x, item.y + 50);
@@ -210,12 +215,14 @@ function drawMorning() {
   } else {
     drawChoiceScreen(selectedItem);
   }
+
+  drawRoomDecorations();
 }
 
 function drawChoiceScreen(item) {
-  drawPixelBorder(15, 50, W - 30, H - 100, 4, color(120, 80, 160));
+  drawPixelBorder(15, 50, W - 30, H - 100, 4, color(180, 140, 100));
 
-  fill(40, 20, 60);
+  fill(100, 70, 40);
   textAlign(CENTER, TOP);
   textSize(24);
   textStyle(BOLD);
@@ -231,17 +238,17 @@ function drawChoiceScreen(item) {
 
     let isHovered = mouseX > bx && mouseX < bx + bw && mouseY > by && mouseY < by + bh;
     if (isHovered) {
-      fill(255, 200, 100);
-      stroke(255, 200, 100);
+      fill(255, 200, 130);
+      stroke(200, 140, 80);
     } else {
-      fill(255);
-      stroke(100, 60, 140);
+      fill(255, 235, 200);
+      stroke(180, 140, 100);
     }
     strokeWeight(3);
     rect(bx, by, bw, bh, 6);
 
     noStroke();
-    fill(40, 20, 60);
+    fill(100, 70, 40);
     textAlign(CENTER, CENTER);
     textSize(14);
     textStyle(BOLD);
@@ -249,47 +256,47 @@ function drawChoiceScreen(item) {
     textStyle(NORMAL);
   });
 
-  fill(100, 70, 130);
-  stroke(100, 70, 130);
+  fill(160, 120, 80);
+  stroke(160, 120, 80);
   strokeWeight(2);
   rect(W / 2 - 80, H - 60, 160, 40, 4);
   noStroke();
-  fill(255);
+  fill(255, 245, 220);
   textAlign(CENTER, CENTER);
   textSize(12);
   text("< BACK", W / 2, H - 40);
 }
 
 function drawMap() {
-  background(140, 200, 255);
+  background(120, 180, 220);
 
   let cloudOffset = (mapScroll * 0.3) % 400;
   drawClouds(cloudOffset);
 
-  fill(80, 120, 60);
+  fill(60, 100, 50);
   noStroke();
   let treeOffset = (mapScroll * 0.7) % 200;
   for (let x = -treeOffset; x < W + 200; x += 200) {
-    drawTree(x, H - 180, 40);
+    drawTree(x, H - 200, 45);
   }
 
-  fill(180, 160, 100);
-  rect(0, H - 200, W, 30);
+  fill(150, 130, 80);
+  rect(0, H - 200, W, 25);
 
-  fill(60, 90, 50);
+  fill(50, 80, 40);
   noStroke();
   rect(0, H - 140, W, 140);
 
-  fill(50, 80, 40);
+  fill(40, 70, 35);
   for (let x = (-(mapScroll * 1.5) % 90); x < W + 90; x += 90) {
-    rect(x, H - 130, 60, 18, 4);
+    rect(x, H - 130, 70, 20, 4);
   }
 
-  fill(100, 100, 80);
-  rect(0, H - 120, W, 30);
-  fill(220, 210, 100);
+  fill(100, 90, 60);
+  rect(0, H - 115, W, 25);
+  fill(200, 190, 80);
   for (let x = (-(mapScroll * 2) % 80); x < W + 80; x += 80) {
-    rect(x, H - 108, 40, 8, 2);
+    rect(x, H - 105, 45, 10, 2);
   }
 
   mapScroll += 2.5;
@@ -300,14 +307,14 @@ function drawMap() {
   push();
   translate(sx + 50, H - 220);
   rotate(tilt);
-  drawSprite(searchImg, 0, 0, 100);
+  drawSprite(searchImg, 0, 0, 110);
   pop();
 
   if (mapScroll > 200) {
     let v = VENUES[venueIdx];
-    drawChatBubble(W / 2, H / 2, ">> " + v.name, "", 160, 100);
+    drawCozyChat(W / 2, H / 2 - 40, ">> " + v.name);
     if (mapScroll > 260) {
-      fill(180, 150, 220);
+      fill(140, 100, 60);
       textAlign(CENTER, BOTTOM);
       textSize(11);
       text("[ TAP TO CONTINUE ]", W / 2, H - 60);
@@ -328,14 +335,14 @@ function drawVenue() {
   let v = VENUES[venueIdx];
   venueTimer++;
 
-  drawPixelBorder(15, 15, W - 30, 180, 3, color(100, 70, 140));
+  drawPixelBorder(15, 15, W - 30, 180, 3, color(180, 140, 100));
 
   mascotX = lerp(mascotX, W / 2 + 30, 0.09);
   let bob = sin(frameCount * 0.05 + 1.0) * 5;
   drawSprite(mascotImgs[v.file], mascotX, 115 + bob, 180);
 
   noStroke();
-  fill(50, 25, 75);
+  fill(120, 80, 50);
   textAlign(CENTER, TOP);
   textSize(22);
   textStyle(BOLD);
@@ -343,10 +350,10 @@ function drawVenue() {
   textStyle(NORMAL);
 
   textSize(13);
-  fill(140, 100, 180);
+  fill(160, 120, 80);
   text("[ " + v.vibe + " VIBES ]", W / 2, 50);
 
-  fill(70, 45, 110);
+  fill(100, 70, 40);
   textSize(11);
   textAlign(CENTER, TOP);
   text(v.description, 18, 72, W - 36, 95);
@@ -354,13 +361,13 @@ function drawVenue() {
   let sc = 1.0;
   if (venueTimer < 20)       sc = map(venueTimer, 0,  20, 1.0, 1.2);
   else if (venueTimer < 40)  sc = map(venueTimer, 20, 40, 1.2, 1.0);
-  let bob2 = sin(frameCount * 0.05) * 4;
-  drawSprite(searchImg, 70, H / 2 + 80 + bob2, 110 * sc);
+  let bob2 = sin(frameCount * 0.05) * 5;
+  drawSprite(searchImg, 75, H / 2 + 60 + bob2, 100 * sc);
 
   if (venueTimer % 20 === 0) {
     floatIcons.push({
       x: mascotX + random(-70, 70),
-      y: H / 2 - 100,
+      y: 100,
       icon: random(v.icons),
       life: 60
     });
@@ -377,7 +384,7 @@ function drawVenue() {
   floatIcons = floatIcons.filter(ic => ic.life > 0);
 
   if (venueTimer > 35) {
-    fill(140, 100, 180);
+    fill(160, 120, 80);
     textAlign(CENTER, BOTTOM);
     textSize(12);
     let nextLabel = venueIdx >= VENUES.length - 1 ? "HEAD HOME" : "CONTINUE";
@@ -386,11 +393,13 @@ function drawVenue() {
 }
 
 function drawEndcard() {
-  background(28, 18, 48);
+  background(255, 245, 220);
 
-  drawPixelBorder(30, 90, W - 60, 300, 4, color(255, 220, 100));
+  drawCRTFrame();
 
-  fill(255, 220, 100);
+  drawPixelBorder(30, 90, W - 60, 300, 4, color(180, 140, 100));
+
+  fill(170, 120, 80);
   noStroke();
   textAlign(CENTER, CENTER);
   textSize(28);
@@ -402,11 +411,11 @@ function drawEndcard() {
   drawSprite(searchImg, W / 2, H / 2 - 40 + bob, 160);
 
   textSize(16);
-  fill(180, 160, 220);
+  fill(140, 100, 60);
   text("TODAY'S VIBE:", W / 2, H / 2 + 85);
 
   textSize(40);
-  fill(255, 220, 100);
+  fill(220, 150, 100);
   textStyle(BOLD);
   text(personalityLabel, W / 2, H / 2 + 145);
   textStyle(NORMAL);
@@ -414,10 +423,12 @@ function drawEndcard() {
   let eLabel = ["LOW ENERGY", "BALANCED", "HIGH ENERGY"][energy];
   let sLabel = ["SOLO MODE", "BALANCED", "SOCIAL"][social];
   textSize(12);
-  fill(160, 140, 200);
+  fill(140, 100, 60);
   text(eLabel + "  ::  " + sLabel, W / 2, H / 2 + 195);
 
   drawButton("PLAY AGAIN", W / 2, H - 75, 200, 50);
+
+  drawRoomDecorations();
 }
 
 // --- game logic ---
@@ -457,11 +468,11 @@ function drawSprite(img, cx, cy, size) {
 }
 
 function drawButton(label, cx, cy, bw, bh) {
-  fill(80, 50, 130);
-  stroke(200, 150, 255);
+  fill(160, 120, 80);
+  stroke(120, 80, 50);
   strokeWeight(3);
   rect(cx - bw / 2, cy - bh / 2, bw, bh, 8);
-  fill(255);
+  fill(255, 245, 220);
   textAlign(CENTER, CENTER);
   textSize(16);
   textStyle(BOLD);
@@ -483,53 +494,69 @@ function drawPixelBorder(x, y, w, h, thickness, c) {
   rect(x + w - thickness, y + thickness, thickness, h - thickness * 2);
 }
 
-function drawChatBubble(cx, cy, line1, line2, w, h) {
+function drawCozyChat(cx, cy, text) {
   fill(255, 245, 255);
-  stroke(140, 100, 180);
+  stroke(180, 140, 100);
   strokeWeight(3);
-  rect(cx - w / 2, cy - h / 2, w, h, 12);
-  triangle(cx - 25, cy + h / 2, cx, cy + h / 2 + 20, cx + 25, cy + h / 2);
+  rect(cx - 80, cy - 45, 160, 90, 12);
+  triangle(cx - 25, cy + 45, cx, cy + 60, cx + 25, cy + 45);
   noStroke();
-  fill(60, 30, 100);
+  fill(120, 80, 50);
   textAlign(CENTER, CENTER);
+  textSize(18);
   textStyle(BOLD);
-  if (line2 === "") {
-    textSize(20);
-    text(line1, cx, cy);
-  } else {
-    textSize(14);
-    text(line1, cx, cy - 8);
-    textSize(18);
-    text(line2, cx, cy + 12);
-  }
+  text(text, cx, cy);
   textStyle(NORMAL);
 }
 
+function drawCRTFrame() {
+  fill(200, 160, 120);
+  rect(-20, -20, W + 40, 60, 8);
+  rect(-20, H - 40, W + 40, 60, 8);
+  rect(-20, 40, 60, H - 80, 8);
+  rect(W - 40, 40, 60, H - 80, 8);
+
+  fill(160, 120, 80);
+  rect(-10, -8, W + 20, 28, 4);
+  rect(-10, H - 20, W + 20, 28, 4);
+}
+
+function drawRoomDecorations() {
+  fill(220, 180, 130);
+  textSize(36);
+  textAlign(CENTER, CENTER);
+
+  text("🌱", 20, 150);
+  text("📚", W - 20, 250);
+  text("☕", 25, H - 180);
+  text("🎮", W - 25, H - 200);
+}
+
 function drawClouds(offset) {
-  fill(255, 255, 255, 150);
+  fill(255, 255, 255, 180);
   noStroke();
 
-  drawCloud(50 - offset, 80, 60);
-  drawCloud(280 - offset, 120, 50);
-  drawCloud(150 - offset, 60, 55);
-  drawCloud(350 - offset, 140, 45);
+  drawCloud(50 - offset, 80, 65);
+  drawCloud(280 - offset, 130, 55);
+  drawCloud(150 - offset, 70, 60);
+  drawCloud(350 - offset, 150, 50);
 }
 
 function drawCloud(x, y, size) {
-  ellipse(x, y, size * 1.2, size * 0.6);
-  ellipse(x - size * 0.4, y + size * 0.1, size * 0.8, size * 0.5);
-  ellipse(x + size * 0.4, y + size * 0.1, size * 0.8, size * 0.5);
+  ellipse(x, y, size * 1.3, size * 0.7);
+  ellipse(x - size * 0.45, y + size * 0.12, size * 0.9, size * 0.6);
+  ellipse(x + size * 0.45, y + size * 0.12, size * 0.9, size * 0.6);
 }
 
 function drawTree(x, y, size) {
-  fill(80, 120, 60);
+  fill(70, 90, 50);
   noStroke();
-  rect(x + size * 0.3, y + size * 0.6, size * 0.4, size * 0.8);
+  rect(x + size * 0.3, y + size * 0.65, size * 0.4, size * 0.8, 3);
 
-  fill(60, 100, 50);
-  ellipse(x + size * 0.5, y - size * 0.2, size * 0.8, size * 0.7);
-  ellipse(x + size * 0.2, y + size * 0.1, size * 0.6, size * 0.6);
-  ellipse(x + size * 0.8, y + size * 0.1, size * 0.6, size * 0.6);
+  fill(50, 80, 40);
+  ellipse(x + size * 0.5, y - size * 0.15, size * 0.9, size * 0.75);
+  ellipse(x + size * 0.15, y + size * 0.12, size * 0.7, size * 0.65);
+  ellipse(x + size * 0.85, y + size * 0.12, size * 0.7, size * 0.65);
 }
 
 // --- input ---
@@ -543,20 +570,20 @@ function mousePressed() {
   if (state === MORNING) {
     if (selectedItem === null) {
       ROOM_ITEMS.forEach(item => {
-        if (dist(mouseX, mouseY, item.x, item.y) < 60) {
+        if (dist(mouseX, mouseY, item.x, item.y) < 65) {
           selectedItem = item;
         }
       });
     } else {
-      if (mouseY > 160 && mouseY < H - 100) {
-        let bx = 40, bw = W - 80, bh = 50, gap = 10, scrollY = 160;
+      if (mouseY > 130 && mouseY < H - 80) {
+        let bx = 30, bw = W - 60, bh = 60, gap = 12, scrollY = 130;
         selectedItem.options.forEach((opt, i) => {
           let by = scrollY + i * (bh + gap);
           if (mouseX > bx && mouseX < bx + bw && mouseY > by && mouseY < by + bh) {
             pickOption(opt, selectedItem);
           }
         });
-      } else if (mouseY > H - 50) {
+      } else if (mouseY > H - 80) {
         selectedItem = null;
       }
     }
@@ -578,7 +605,9 @@ function mousePressed() {
   }
 
   if (state === ENDCARD) {
-    if (hitButton(W / 2, H - 110, 180, 50)) resetGame();
+    if (mouseX > W/2 - 100 && mouseX < W/2 + 100 && mouseY > H - 110 && mouseY < H - 55) {
+      resetGame();
+    }
     return;
   }
 }
